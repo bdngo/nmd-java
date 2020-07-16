@@ -1,15 +1,17 @@
 package nmd;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+
+import static nmd.Utils.*;
 
 /**
  * Simulation of the game Monopoly Deal in Java.
  * @author Bryan Ngo
  */
 public class Main {
-
 
     /** Mapping containing all the colors and their amounts. */
     public static final HashMap<Color, Integer> COLOR2AMT = new HashMap<>();
@@ -30,7 +32,11 @@ public class Main {
     public static ArrayList<Card> DECK, DISCARDS;
 
     /** All the players in the game. */
-    public static ArrayList<Player> PLAYERS;
+    public static Player[] PLAYERS;
+
+    public static File CWD = new File(".");
+
+    public static File GAMES_DIR = join(CWD, ".games");
 
     /**
      * Main method.
@@ -38,9 +44,19 @@ public class Main {
      */
     public static void main(String[] args) {
         // TODO: Command interface
-        DECK = new ArrayList<>();
-        DISCARDS = new ArrayList<>();
-        PLAYERS = new ArrayList<>();
+        switch (args[0]) {
+            case "start":
+                initGame(args);
+                break;
+            case "load":
+                loadFromFile(args);
+                break;
+            case "delete":
+                deleteGame(args);
+                break;
+            default:
+                throw error("Not a valid argument");
+        }
     }
 
     /* UTILITY METHODS */
@@ -58,6 +74,34 @@ public class Main {
     }
 
     /* GAME FUNCTIONALITY */
+
+
+    /**
+     * Initializes a new game.
+     * @param args Number of players to start with.
+     */
+    public static void initGame(String[] args) {
+        validateNumArgs(args, 2);
+        int numPlayers = Integer.parseInt(args[1]);
+        if (numPlayers <= 2 || numPlayers >= 5) {
+            throw error("too little/too many players");
+        }
+        GAMES_DIR.mkdir();
+        DECK = new ArrayList<>();
+        DISCARDS = new ArrayList<>();
+        PLAYERS = new Player[numPlayers];
+        for (int i = 0; i < PLAYERS.length; i += 1) {
+            PLAYERS[i] = new Player(i);
+        }
+    }
+
+    public static void loadFromFile(String[] args) {
+        return;
+    }
+
+    public static void deleteGame(String[] args) {
+        return;
+    }
 
     /**
      * Counts the number of full sets P has.
@@ -100,4 +144,16 @@ public class Main {
     /* DECK CONSTRUCTION */
 
     // TODO: deck builder
+
+    /**
+     * Checks the number of arguments versus the expected number,
+     *
+     * @param args Argument array from command line
+     * @param n Number of expected arguments
+     */
+    public static void validateNumArgs(String[] args, int n) {
+        if (args.length != n) {
+            throw error("Incorrect operands.");
+        }
+    }
 }
