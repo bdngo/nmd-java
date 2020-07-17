@@ -21,6 +21,7 @@ public class Game implements Serializable {
         _playerList = ps;
         _turn = turn;
         _deck = deck;
+        _discards = discards;
     }
 
     /**
@@ -36,7 +37,7 @@ public class Game implements Serializable {
      * @param name Name of save to load.
      * @return Game class containing game state.
      */
-    public Game loadGame(String name) {
+    public static Game loadGame(String name) {
         File path = join(Main.GAMES_DIR, name);
         if (!path.exists()) {
             throw error("%s does not exist", name);
@@ -44,12 +45,30 @@ public class Game implements Serializable {
         return readObject(path, Game.class);
     }
 
+    public Player[] getPlayerList() {
+        return _playerList;
+    }
+
+    public int getTurn() {
+        return _turn;
+    }
+
+    public ArrayList<Card> getDeck() {
+        return _deck;
+    }
+
+    public ArrayList<Card> getDiscards() {
+        return _discards;
+    }
+
     /** List of players, sorted by play order. */
-    Player[] _playerList;
+    private final Player[] _playerList;
 
     /** Current index of `_playerList` indicating turn. */
-    int _turn;
+    private final int _turn;
 
     /** Current drawing deck of the game. */
-    ArrayList<Card> _deck;
+    private final ArrayList<Card> _deck;
+
+    private final ArrayList<Card> _discards;
 }

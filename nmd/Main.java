@@ -4,8 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Scanner;
 
 import static nmd.Utils.*;
+import static nmd.Game.*;
 
 /**
  * Simulation of the game Monopoly Deal in Java.
@@ -34,6 +36,12 @@ public class Main {
     /** All the players in the game. */
     public static Player[] PLAYERS;
 
+    /**
+     * Starting turn of the game. Usually zero when initializing,
+     * but may be different when loading a previous save.
+     */
+    private static int INIT_TURN = 0;
+
     public static File CWD = new File(".");
 
     public static File GAMES_DIR = join(CWD, ".games");
@@ -43,7 +51,6 @@ public class Main {
      * @param args Commands to issue.
      */
     public static void main(String[] args) {
-        // TODO: Command interface
         switch (args[0]) {
             case "start":
                 initGame(args);
@@ -55,8 +62,9 @@ public class Main {
                 deleteGame(args);
                 break;
             default:
-                throw error("Not a valid argument");
+                throw error("Not a valid argument.");
         }
+        play();
     }
 
     /* UTILITY METHODS */
@@ -73,8 +81,30 @@ public class Main {
         }
     }
 
-    /* GAME FUNCTIONALITY */
+    /**
+     * Generates a fail-safe input.
+     * @param query Question to ask for input.
+     * @param error Error message to print.
+     * @return The answer to standard input.
+     */
+    public static String fsInput(String query, String error) {
+        Scanner s;
+        while (true) {
+            try {
+                System.out.println(query);
+                s = new Scanner(System.in);
+                if (s.toString().isEmpty()) {
+                    throw error("Input is empty.");
+                }
+                break;
+            } catch (NMDException e) {
+                continue;
+            }
+        }
+        return s.toString();
+    }
 
+    /* GAME FUNCTIONALITY */
 
     /**
      * Initializes a new game.
@@ -84,7 +114,7 @@ public class Main {
         validateNumArgs(args, 2);
         int numPlayers = Integer.parseInt(args[1]);
         if (numPlayers <= 2 || numPlayers >= 5) {
-            throw error("too little/too many players");
+            throw error("Too little/too many players.");
         }
         GAMES_DIR.mkdir();
         DECK = new ArrayList<>();
@@ -96,11 +126,36 @@ public class Main {
     }
 
     public static void loadFromFile(String[] args) {
-        return;
+        validateNumArgs(args, 2);
+        File path = join(GAMES_DIR, args[1]);
+        if (!path.exists()) {
+            throw error("Game file does not exist.");
+        }
+        Game toPlay = loadGame(args[1]);
+        DECK = toPlay.getDeck();
+        DISCARDS = toPlay.getDiscards();
+        PLAYERS = toPlay.getPlayerList();
+        INIT_TURN = toPlay.getTurn();
     }
 
     public static void deleteGame(String[] args) {
-        return;
+        validateNumArgs(args, 2);
+        File path = join(GAMES_DIR, args[1]);
+        if (!path.exists()) {
+            throw error("Game file does not exist.");
+        }
+        path.delete();
+    }
+
+    public static void play() {
+        for (int i = INIT_TURN; i < PLAYERS.length;
+             i = (i + 1) % PLAYERS.length) {
+            turn(PLAYERS[i]);
+            if (isWinner(PLAYERS[i])) {
+                String.format("Player %d has won!", i + 1);
+                System.exit(0);
+            }
+        }
     }
 
     /**
