@@ -62,7 +62,7 @@ public class Main {
                 deleteGame(args);
                 break;
             default:
-                throw error("Not a valid argument.");
+                throw error("Not a valid command.");
         }
         play();
     }
@@ -98,6 +98,7 @@ public class Main {
                 }
                 break;
             } catch (NMDException e) {
+                System.out.println(error);
                 continue;
             }
         }
@@ -117,7 +118,7 @@ public class Main {
             throw error("Too little/too many players.");
         }
         GAMES_DIR.mkdir();
-        DECK = new ArrayList<>();
+        DECK = constructMoney();
         DISCARDS = new ArrayList<>();
         PLAYERS = new Player[numPlayers];
         for (int i = 0; i < PLAYERS.length; i += 1) {
@@ -125,6 +126,10 @@ public class Main {
         }
     }
 
+    /**
+     * Loads a file from ARGS.
+     * @param args File path to load file from.
+     */
     public static void loadFromFile(String[] args) {
         validateNumArgs(args, 2);
         File path = join(GAMES_DIR, args[1]);
@@ -138,6 +143,10 @@ public class Main {
         INIT_TURN = toPlay.getTurn();
     }
 
+    /**
+     * Deletes a game from ARGS.
+     * @param args File path to delete file from.
+     */
     public static void deleteGame(String[] args) {
         validateNumArgs(args, 2);
         File path = join(GAMES_DIR, args[1]);
@@ -147,12 +156,15 @@ public class Main {
         path.delete();
     }
 
+    /**
+     * Starts a game of Not Monopoly Deal.
+     */
     public static void play() {
         for (int i = INIT_TURN; i < PLAYERS.length;
              i = (i + 1) % PLAYERS.length) {
             turn(PLAYERS[i]);
             if (isWinner(PLAYERS[i])) {
-                String.format("Player %d has won!", i + 1);
+                System.out.printf("Player %d has won!%n", i + 1);
                 System.exit(0);
             }
         }
@@ -194,11 +206,38 @@ public class Main {
             Collections.shuffle(DECK);
         }
         drawCards(p, 2);
+        Scanner s;
+        int toPlay;
+        do {
+            System.out.println("Play a card:\n");
+            System.out.println(p);
+            s = new Scanner(System.in);
+            toPlay = Integer.parseInt(s.toString());
+        } while (!(0 <= toPlay && toPlay < p.getHand().size()));
+        p.play(toPlay);
     }
 
     /* DECK CONSTRUCTION */
 
     // TODO: deck builder
+    public static ArrayList<Card> constructMoney() {
+        ArrayList<Card> money = new ArrayList<>();
+        for (int i = 0; i < 6; i += 1) {
+            money.add(new Money(Money.DENOMINATIONS.get(0)));
+        }
+        for (int i = 0; i < 5; i += 1) {
+            money.add(new Money(Money.DENOMINATIONS.get(1)));
+        }
+        for (int i = 0; i < 3; i += 1) {
+            money.add(new Money(Money.DENOMINATIONS.get(2)));
+            money.add(new Money(Money.DENOMINATIONS.get(3)));
+        }
+        for (int i = 0; i < 2; i += 1) {
+            money.add(new Money(Money.DENOMINATIONS.get(4)));
+        }
+        money.add(new Money(Money.DENOMINATIONS.get(5)));
+        return money;
+    }
 
     /**
      * Checks the number of arguments versus the expected number,

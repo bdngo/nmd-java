@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static nmd.Main.*;
+import static nmd.Utils.*;
 
 /**
  * Player class.
@@ -34,6 +35,9 @@ public class Player {
      * @param index Index of the card to play.
      */
     public void play(int index) {
+        if (index < 0 || index >= _hand.size()) {
+            throw error("Index out of bounds");
+        }
         Card toPlay = _hand.remove(index);
         toPlay.action(this);
         if (!(toPlay instanceof Placeable)) {
@@ -41,7 +45,27 @@ public class Player {
         }
     }
 
-    // TODO: toString
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        s.append("=== Player ").append(_order).append(" ===\n");
+        s.append("Current field:\n");
+        for (Color color : _field.keySet()) {
+            s.append(String.format(
+                    "%s: %d\n", color.toString(), _field.get(color)
+            ));
+        }
+        s.append("\nCurrent bank:\n");
+        for (Money money : _bank.keySet()) {
+            s.append(money.getValue()).append("\n");
+        }
+        s.append("\nCurrent hand:\n");
+        for (int i = 0; i < _hand.size(); i += 1) {
+            s.append(i).append(": ");
+            s.append(_hand.get(i).toString()).append("\n");
+        }
+        return s.toString();
+    }
 
     /**
      * Pays PAYEE with AMOUNT dollars in the Monopoly Deal fashion.
@@ -58,6 +82,14 @@ public class Player {
      */
     public HashMap<Color, Integer> getField() {
         return _field;
+    }
+
+    /**
+     * Getter of _HAND.
+     * @return The player's hand.
+     */
+    public ArrayList<Card> getHand() {
+        return _hand;
     }
 
     /**
@@ -87,6 +119,6 @@ public class Player {
     /** Hashmap holding the player's field of properties. */
     private HashMap<Color, Integer> _field;
 
-    /** Hashmap holding the player's money */
+    /** Hashmap holding the player's money. */
     private HashMap<Money, Integer> _bank;
 }

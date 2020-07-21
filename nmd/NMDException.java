@@ -11,7 +11,7 @@ public class NMDException extends RuntimeException {
         super();
     }
 
-    /** Exception with message. */
+    /** Overloaded exception with message. */
     NMDException(String msg) {
         super(msg);
     }

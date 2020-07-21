@@ -6,9 +6,16 @@ package nmd;
  */
 public abstract class Card {
 
+    /**
+     * Abstract method for card actions.
+     * @param p Player to enact the action.
+     */
     public abstract void action(Player p);
 
-    public String toString() {
-        return "Placeholder Card";
-    }
+    /**
+     * `toString` override.
+     * @return String format of the card.
+     */
+    @Override
+    public abstract String toString();
 }

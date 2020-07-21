@@ -1,7 +1,5 @@
 package nmd;
 
-import static nmd.Color.*;
-
 public class Property extends Card implements Placeable, Payable {
 
     public Property(Color c) {
@@ -18,6 +16,11 @@ public class Property extends Card implements Placeable, Payable {
         return 0;
     }
 
+    @Override
+    public String toString() {
+        return "Property";
+    }
+
     /** Color of this property. */
-    private Color _color;
+    private final Color _color;
 }

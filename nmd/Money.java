@@ -31,6 +31,11 @@ public class Money extends Card implements Payable {
         return _value;
     }
 
+    @Override
+    public String toString() {
+        return getValue() + "M";
+    }
+
     /** Worth of the money. */
     private final int _value;
 }
