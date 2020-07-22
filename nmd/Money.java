@@ -12,8 +12,13 @@ import static nmd.Utils.*;
 public class Money extends Card implements Payable {
 
     /** List of denominations. */
-    public static final List<Integer> DENOMINATIONS = Arrays.asList(1, 2, 3, 4, 5, 10);
+    public static final List<Integer> DENOMINATIONS = Arrays.asList(
+            1, 2, 3, 4, 5, 10);
 
+    /**
+     * Constructor for the `Money` class.
+     * @param value The value of the currency. Must be in `DENOMINATIONS`.
+     */
     public Money(int value) {
         if (!DENOMINATIONS.contains(value)) {
             throw error("Not a valid denomination.");
@@ -21,16 +26,28 @@ public class Money extends Card implements Payable {
         _value = value;
     }
 
+    /**
+     * Overrider for Card abstract class.
+     * @param p Player to enact the action.
+     */
     @Override
     public void action(Player p) {
-        p.addMoney(this);
+        p.addMoney(getValue());
     }
 
+    /**
+     * Overrider for Payable interface.
+     * @return This money's value.
+     */
     @Override
     public int getValue() {
         return _value;
     }
 
+    /**
+     * `toString` override.
+     * @return String formatting of this money.
+     */
     @Override
     public String toString() {
         return getValue() + "M";

@@ -2,9 +2,11 @@ package nmd;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Scanner;
 
 import static nmd.Main.*;
 import static nmd.Utils.*;
+import static nmd.Money.DENOMINATIONS;
 
 /**
  * Player class.
@@ -20,7 +22,13 @@ public class Player {
         _order = order;
         _hand = new ArrayList<>();
         _field = new HashMap<>();
+        for (Color c : Color.values()) {
+            _field.put(c, 0);
+        }
         _bank = new HashMap<>();
+        for (int denom : DENOMINATIONS) {
+            _bank.put(denom, 0);
+        }
     }
 
     /**
@@ -34,7 +42,7 @@ public class Player {
      * Plays a card from this player's _HAND.
      * @param index Index of the card to play.
      */
-    public void play(int index) {
+    public void playCard(int index) {
         if (index < 0 || index >= _hand.size()) {
             throw error("Index out of bounds");
         }
@@ -45,23 +53,56 @@ public class Player {
         }
     }
 
+    /**
+     * `toString` override.
+     * @return This player's order, field, bank, and hand.
+     */
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
         s.append("=== Player ").append(_order).append(" ===\n");
+        s.append(printField()).append(printBank()).append(printHand());
+        return s.toString();
+    }
+
+    /**
+     * Field printer helper method.
+     * @return This player's field.
+     */
+    private String printField() {
+        StringBuilder s = new StringBuilder();
         s.append("Current field:\n");
         for (Color color : _field.keySet()) {
             s.append(String.format(
                     "%s: %d\n", color.toString(), _field.get(color)
             ));
         }
+        return s.toString();
+    }
+
+    /**
+     * Bank printer helper method.
+     * @return This player's bank.
+     */
+    private String printBank() {
+        StringBuilder s = new StringBuilder();
         s.append("\nCurrent bank:\n");
-        for (Money money : _bank.keySet()) {
-            s.append(money.getValue()).append("\n");
+        for (int money : DENOMINATIONS) {
+            s.append(money).append("M: ");
+            s.append(_bank.get(money)).append("\n");
         }
+        return s.toString();
+    }
+
+    /**
+     * Hand printer helper method.
+     * @return This player's hand.
+     */
+    private String printHand() {
+        StringBuilder s = new StringBuilder();
         s.append("\nCurrent hand:\n");
         for (int i = 0; i < _hand.size(); i += 1) {
-            s.append(i).append(": ");
+            s.append(String.format("[%d]", i)).append(": ");
             s.append(_hand.get(i).toString()).append("\n");
         }
         return s.toString();
@@ -73,7 +114,57 @@ public class Player {
      * @param amount Number of Monopoly monies to pay.
      */
     public void pay(Player payee, int amount) {
+        int subtotal = 0;
+        Scanner s;
+        while (subtotal < amount) {
+            System.out.printf("%d remaining", subtotal - amount);
+            if (_bank.isEmpty() && _field.isEmpty()) {
+                System.out.printf("Player %d has nothing, skipping...", _order);
+            } else if (_bank.isEmpty()) {
+                Color prop;
+                System.out.println(printField());
+                System.out.println("No more money! Pick a property to sell:");
+                s = new Scanner(System.in);
+                while (true) {
+                    try {
+                        prop = Color.str2Color(s.nextLine());
+                        break;
+                    } catch (NMDException e) {
+                        System.out.println(e.getMessage());
+                    }
+                }
+                int propValue = COLOR2AMT.get(prop);
+                _bank.replace(propValue, _bank.get(propValue) - 1);
+                payee._bank.replace(propValue, payee._bank.get(propValue) + 1);
+                subtotal += propValue;
+            } else {
+                System.out.println(printBank());
+                System.out.println("Pick an amount to withdraw:");
+                s = new Scanner(System.in);
+                int prop2Sell;
+                do {
+                    prop2Sell = Integer.parseInt(s.nextLine());
+                } while (!DENOMINATIONS.contains(prop2Sell));
+                _bank.replace(prop2Sell, _bank.get(prop2Sell) - 1);
+                payee._bank.replace(prop2Sell,
+                        payee._bank.get(prop2Sell) + 1);
+                subtotal += prop2Sell;
+            }
+        }
+    }
+
+    /**
+     * Sells a card.
+     * @param index Index of card to sell.
+     */
+    public void sell(int index) {
         // TODO: this
+        Card sold = _hand.remove(index);
+        if (!(sold instanceof Payable)) {
+            throw error("Not a payable card");
+        }
+        int amt = ((Payable) sold).getValue();
+        _bank.replace(amt, _bank.get(amt) + 1);
     }
 
     /**
@@ -96,18 +187,12 @@ public class Player {
      * Adds M to the player's bank.
      * @param m Denomination to add.
      */
-    public void addMoney(Money m) {
-        if (!_bank.containsKey(m)) {
-            _bank.put(m, 0);
-        }
-        _bank.replace(m, _bank.get(m), _bank.get(m) + 1);
+    public void addMoney(int m) {
+        _bank.replace(m, _bank.get(m) + 1);
     }
 
     public void addProp(Color prop) {
-        if (!_field.containsKey(prop)) {
-            _field.put(prop, 0);
-        }
-        _field.replace(prop, _field.get(prop), _field.get(prop) + 1);
+        _field.replace(prop, _field.get(prop) + 1);
     }
 
     /** Order of the player. */
@@ -120,5 +205,5 @@ public class Player {
     private HashMap<Color, Integer> _field;
 
     /** Hashmap holding the player's money. */
-    private HashMap<Money, Integer> _bank;
+    private final HashMap<Integer, Integer> _bank;
 }
