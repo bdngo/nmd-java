@@ -22,13 +22,7 @@ public class Player {
         _order = order;
         _hand = new ArrayList<>();
         _field = new HashMap<>();
-        for (Color c : Color.values()) {
-            _field.put(c, 0);
-        }
         _bank = new HashMap<>();
-        for (int denom : DENOMINATIONS) {
-            _bank.put(denom, 0);
-        }
     }
 
     /**
@@ -59,10 +53,10 @@ public class Player {
      */
     @Override
     public String toString() {
-        StringBuilder s = new StringBuilder();
-        s.append("=== Player ").append(_order).append(" ===\n");
-        s.append(printField()).append(printBank()).append(printHand());
-        return s.toString();
+        return "=== Player " + _order + " ===\n"
+                + printField()
+                + printBank()
+                + printHand();
     }
 
     /**
@@ -88,8 +82,10 @@ public class Player {
         StringBuilder s = new StringBuilder();
         s.append("\nCurrent bank:\n");
         for (int money : DENOMINATIONS) {
-            s.append(money).append("M: ");
-            s.append(_bank.get(money)).append("\n");
+            if (_bank.containsKey(money)) {
+                s.append(money).append("M: ");
+                s.append(_bank.get(money)).append("\n");
+            }
         }
         return s.toString();
     }
@@ -115,16 +111,16 @@ public class Player {
      */
     public void pay(Player payee, int amount) {
         int subtotal = 0;
-        Scanner s;
+        Scanner s = new Scanner(System.in);
         while (subtotal < amount) {
-            System.out.printf("%d remaining", subtotal - amount);
+            System.out.printf("%d remaining\n", amount - subtotal);
             if (_bank.isEmpty() && _field.isEmpty()) {
-                System.out.printf("Player %d has nothing, skipping...", _order);
+                System.out.printf("Player %d has nothing, skipping...\n", _order);
+                return;
             } else if (_bank.isEmpty()) {
                 Color prop;
                 System.out.println(printField());
                 System.out.println("No more money! Pick a property to sell:");
-                s = new Scanner(System.in);
                 while (true) {
                     try {
                         prop = Color.str2Color(s.nextLine());
@@ -133,21 +129,18 @@ public class Player {
                         System.out.println(e.getMessage());
                     }
                 }
-                int propValue = COLOR2AMT.get(prop);
-                _bank.replace(propValue, _bank.get(propValue) - 1);
-                payee._bank.replace(propValue, payee._bank.get(propValue) + 1);
-                subtotal += propValue;
+                _field.replace(prop, _field.get(prop) - 1);
+                payee.addProp(prop);
+                subtotal += COLOR2AMT.get(prop);
             } else {
                 System.out.println(printBank());
                 System.out.println("Pick an amount to withdraw:");
-                s = new Scanner(System.in);
                 int prop2Sell;
                 do {
                     prop2Sell = Integer.parseInt(s.nextLine());
                 } while (!DENOMINATIONS.contains(prop2Sell));
                 _bank.replace(prop2Sell, _bank.get(prop2Sell) - 1);
-                payee._bank.replace(prop2Sell,
-                        payee._bank.get(prop2Sell) + 1);
+                payee.addMoney(prop2Sell);
                 subtotal += prop2Sell;
             }
         }
@@ -158,29 +151,52 @@ public class Player {
      * @param index Index of card to sell.
      */
     public void sell(int index) {
-        // TODO: this
         Card sold = _hand.remove(index);
         if (!(sold instanceof Payable)) {
             throw error("Not a payable card");
         }
         int amt = ((Payable) sold).getValue();
-        _bank.replace(amt, _bank.get(amt) + 1);
+        addMoney(amt);
+    }
+
+    /**
+     * Discards a card from this player's _HAND.
+     * @param index Index of card to discard.
+     */
+    public void discard(int index) {
+        DISCARDS.add(_hand.remove(index));
     }
 
     /**
      * Getter of _FIELD.
-     * @return The player's field.
+     * @return This player's field.
      */
     public HashMap<Color, Integer> getField() {
         return _field;
     }
 
     /**
+     * Getter of _BANK.
+     * @return This player's bank.
+     */
+    public HashMap<Integer, Integer> getBank() {
+        return _bank;
+    }
+
+    /**
      * Getter of _HAND.
-     * @return The player's hand.
+     * @return This player's hand.
      */
     public ArrayList<Card> getHand() {
         return _hand;
+    }
+
+    /**
+     * Getter of _ORDER.
+     * @return This player's order.
+     */
+    public int getOrder() {
+        return _order;
     }
 
     /**
@@ -188,10 +204,16 @@ public class Player {
      * @param m Denomination to add.
      */
     public void addMoney(int m) {
+        if (!_bank.containsKey(m)) {
+            _bank.put(m, 0);
+        }
         _bank.replace(m, _bank.get(m) + 1);
     }
 
     public void addProp(Color prop) {
+        if (!_field.containsKey(prop)) {
+            _field.put(prop, 0);
+        }
         _field.replace(prop, _field.get(prop) + 1);
     }
 
@@ -199,10 +221,10 @@ public class Player {
     private final int _order;
 
     /** Array holding the player's hand. */
-    private ArrayList<Card> _hand;
+    private final ArrayList<Card> _hand;
 
     /** Hashmap holding the player's field of properties. */
-    private HashMap<Color, Integer> _field;
+    private final HashMap<Color, Integer> _field;
 
     /** Hashmap holding the player's money. */
     private final HashMap<Integer, Integer> _bank;

@@ -30,6 +30,11 @@ public enum Color {
         };
     }
 
+    /**
+     * Name of color to color object conversion.
+     * @param c Name of color, case insensitive.
+     * @return Color object.
+     */
     public static Color str2Color(String c) {
         return switch (c.toLowerCase()) {
             case "brown" -> BROWN;

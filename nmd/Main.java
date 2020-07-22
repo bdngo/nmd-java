@@ -17,7 +17,7 @@ import static nmd.Money.DENOMINATIONS;
  */
 public class Main {
 
-    /** Mapping containing all the colors and their amounts. */
+    /** Mapping containing all the colors and their quantities. */
     public static final HashMap<Color, Integer> COLOR2AMT = new HashMap<>();
     static {
         COLOR2AMT.put(BROWN, 2);
@@ -95,6 +95,8 @@ public class Main {
             DECK = new ArrayList<>();
             DECK.addAll(constructMoney());
             DECK.addAll(constructProps());
+            DECK.addAll(constructRents());
+            DECK.addAll(constructSpecs());
         }
         Collections.shuffle(DECK);
         DISCARDS = new ArrayList<>();
@@ -182,8 +184,8 @@ public class Main {
             DISCARDS.clear();
             Collections.shuffle(DECK);
         }
-        drawCards(p, 2);
-        Scanner s;
+        drawCards(p, p.getHand().isEmpty() ? 5 : 2);
+        Scanner s = new Scanner(System.in);
         String cmd;
         int toPlay;
         for (int i = 3; i > 0; i -= 1) {
@@ -193,7 +195,6 @@ public class Main {
                         "Play a card "
                         + "(%d action(s) left, 'end' to end turn, "
                         + "'sell' to sell a card):\n", i);
-                s = new Scanner(System.in);
                 cmd = s.nextLine();
                 if (cmd.equals("end")) {
                     return;
@@ -209,6 +210,21 @@ public class Main {
                     p.playCard(toPlay);
                 }
             } while (cmd.isEmpty());
+            for (Color color : p.getField().keySet()) {
+                if (p.getField().get(color) == 0) {
+                    p.getField().remove(color);
+                }
+            }
+            for (int j : p.getBank().keySet()) {
+                if (p.getBank().get(j) == 0) {
+                    p.getBank().remove(j);
+                }
+            }
+        }
+        while (p.getHand().size() > 7) {
+            System.out.println("Too many cards, choose a card to discard:");
+            int toDisc = Integer.parseInt(s.nextLine());
+            p.discard(toDisc);
         }
     }
 
@@ -220,7 +236,7 @@ public class Main {
      * Constructs the game's money.
      * @return An `ArrayList` containing this game's money.
      */
-    public static ArrayList<Card> constructMoney() {
+    private static ArrayList<Card> constructMoney() {
         ArrayList<Card> money = new ArrayList<>();
         for (int i = 0; i < 6; i += 1) {
             money.add(new Money(DENOMINATIONS.get(0)));
@@ -243,7 +259,7 @@ public class Main {
      * Constructor of the game's properties.
      * @return An `ArrayList` containing this game's properties.
      */
-    public static ArrayList<Card> constructProps() {
+    private static ArrayList<Card> constructProps() {
         ArrayList<Card> props = new ArrayList<>();
         for (Color c : COLOR2AMT.keySet()) {
             for (int i = 0; i < COLOR2AMT.get(c); i += 1) {
@@ -251,6 +267,28 @@ public class Main {
             }
         }
         return props;
+    }
+
+    private static ArrayList<Card> constructRents() {
+        ArrayList<Card> rents = new ArrayList<>();
+        for (int i = 0; i < 2; i += 1) {
+            rents.add(new Rent(GREEN, BLUE));
+            rents.add(new Rent(BROWN, L_BLUE));
+            rents.add(new Rent(PURPLE, ORANGE));
+            rents.add(new Rent(RAILROAD, UTILITY));
+            rents.add(new Rent(YELLOW, RED));
+        }
+        // TODO: targeted rents, über wildcards
+        return rents;
+    }
+
+    private static ArrayList<Card> constructSpecs() {
+        ArrayList<Card> specs = new ArrayList<>();
+        for (int i = 0; i < 10; i += 1) {
+            specs.add(new PassGO());
+        }
+        // TODO: all the action cards
+        return specs;
     }
 
     /**
